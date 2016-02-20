@@ -12,12 +12,13 @@ A command which launches a separate window with the images from the current arti
 = Requirements =
 
 - feh for image display. It is minimal and has slideshow and URL loading features.
+Update: No longer required as an alternative can be specified in the config. feh is the default.
 
 = Implementation =
 
 1. Research mediawiki API and find a way to get the image URLs.
-2. Create new command and make sure it works with tab completion.
+2. Create new command and make sure it works with completion. <- Done
 3. Write a function to fetch the image URLs
 4. Write a function to launch feh with the URLs as arguments.
-5. Link command in with said functions.
-6. Implement error handling in case of zero URLs or feh not present.
+5. Implement error handling in case of zero URLs or feh not present.
+6. Link command in with said functions.
