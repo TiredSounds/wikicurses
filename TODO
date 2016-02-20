@@ -16,9 +16,11 @@ Update: No longer required as an alternative can be specified in the config. feh
 
 = Implementation =
 
-1. Research mediawiki API and find a way to get the image URLs.
+1. Research mediawiki API and find a way to get the image URLs. <- Done
 2. Create new command and make sure it works with completion. <- Done
-3. Write a function to fetch the image URLs
+3. Write function(s) to fetch the image URLs. This is done by searching
+   the page source code (regex) and matching with those found through the API.
+   This is done to filter out icons and such.
 4. Write a function to launch feh with the URLs as arguments.
-5. Implement error handling in case of zero URLs or feh not present.
+5. Implement error handling in case of zero URLs or program not present.
 6. Link command in with said functions.
