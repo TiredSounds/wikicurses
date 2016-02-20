@@ -1,2 +1,23 @@
 - Add :set command / other method to configure from within wikicurses
 - Bash completion (currently only has zsh completion)
+
+### TS ###
+
+feature_images
+
+= Description =
+
+A command which launches a separate window with the images from the current article.
+
+= Requirements =
+
+- feh for image display. It is minimal and has slideshow and URL loading features.
+
+= Implementation =
+
+1. Research mediawiki API and find a way to get the image URLs.
+2. Create new command and make sure it works with tab completion.
+3. Write a function to fetch the image URLs
+4. Write a function to launch feh with the URLs as arguments.
+5. Link command in with said functions.
+6. Implement error handling in case of zero URLs or feh not present.
