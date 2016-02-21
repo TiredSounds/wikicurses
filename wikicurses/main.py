@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import argparse
 import tempfile
 import subprocess
@@ -33,6 +34,78 @@ def tabComplete(text, matches):
     else:
         match = matches[0]
     return match
+
+
+def showImages():
+    """
+    Launch program to display the images for the current article.
+
+    The program is specified in the config, along with it's args.
+    Otherwise, the default is `feh`.
+    """
+    targets = fetchImageTargets()
+
+    if not targets:
+        return
+
+    urls = fetchImageUrls()
+    filtered = [url for t in targets for url in urls if t in url]
+
+    try:
+        command = [settings.conf.get('images', 'program')]
+    except (settings.configparser.NoOptionError,
+            settings.configparser.NoSectionError):
+        command = ['feh']
+
+    try:
+        args = settings.conf.get('images', 'arguments').split(', ')
+    except (settings.configparser.NoOptionError,
+            settings.configparser.NoSectionError):
+        if command == ['feh']:
+            args = ['-q', '--zoom', 'fill', '--image-bg', 'white', '-g', '300x300']
+        else:
+            args = []
+
+    command.extend(args)
+    command.extend(filtered)
+
+    try:
+        with open(os.devnull, 'w') as fp:
+            subprocess.Popen(command, stdout=fp, stderr=fp)
+    except FileNotFoundError:
+        return
+
+
+def fetchImageTargets():
+    """
+    Get filenames of relevant images from the current article.
+
+    These are used to filter out non-relevant images from the API result.
+    """
+    url = re.sub(r'api.php', 'index.php', wiki.siteurl)
+    page_title = re.sub(r' ', '_', page.title)
+    raw = wiki._query(customurl=url, action="raw", title=page_title)
+
+    targets = re.findall(r'\b(?:File|Image):[^]|\n\r]+', raw) # relevant ones
+    targets = [re.sub(r'(?:File|Image):', '', i) for i in targets]
+    targets = [re.sub(r' ', '_', i) for i in targets]
+
+    return targets
+
+
+def fetchImageUrls():
+    """Use API to fetch all image urls on current article."""
+    page_title = re.sub(r' ', '_', page.title)
+    result = wiki._query(action="query", titles=page_title, generator="images",
+                         prop="imageinfo", iiprop="url", format="json")
+
+    json_result = json.loads(result)
+    urls = []
+
+    for v in json_result['query']['pages'].values():
+        urls.append(v['imageinfo'][0]['url'])
+
+    return urls
 
 
 class SearchBox(urwid.Edit):
@@ -495,7 +568,7 @@ overlaymap = {'bmarks': Bmarks,
               'extlinks': Extlinks,
               'langs': Langs}
 cmds = tuple(overlaymap) + ('quit', 'bmark', 'open', 'edit', 'clearcache',
-                            'help', 'back', 'forward', 'random')
+                            'help', 'back', 'forward', 'random', 'images')
 
 def processCmd(cmd, *args):
     global current
@@ -528,6 +601,8 @@ def processCmd(cmd, *args):
             openPage(history[current], browsinghistory=True)
     elif cmd == 'random':
         openPage(wiki.random())
+    elif cmd == 'images':
+        showImages()
     elif cmd:
         ex.notify(cmd + ': Unknown Command')
 

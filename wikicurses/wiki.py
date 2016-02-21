@@ -87,7 +87,12 @@ class Wiki(object):
     def _query(self, post=False, **kwargs):
         params = {k: v for k, v in kwargs.items() if v is not False}
         data = urllib.parse.urlencode(params)
-        url = self.siteurl
+
+        try:
+            url = params['customurl']
+        except KeyError:
+            url = self.siteurl
+
         if post:
             data = data.encode()
         if not post:
