@@ -43,9 +43,14 @@ def showImages():
     The program is specified in the config, along with it's args.
     Otherwise, the default is `feh`.
     """
+    if 'wikipedia.org' not in wiki.siteurl:
+        ex.notify('Cancelled: Only works on Wikipedia')
+        return
+
     targets = fetchImageTargets()
 
     if not targets:
+        ex.notify('No relevant images found')
         return
 
     urls = fetchImageUrls()
@@ -62,7 +67,7 @@ def showImages():
     except (settings.configparser.NoOptionError,
             settings.configparser.NoSectionError):
         if command == ['feh']:
-            args = ['-q', '--zoom', 'fill', '--image-bg', 'white', '-g', '300x300']
+            args = ['-q', '--zoom', 'fill', '--image-bg', 'white', '-g', '400x400']
         else:
             args = []
 
@@ -73,6 +78,7 @@ def showImages():
         with open(os.devnull, 'w') as fp:
             subprocess.Popen(command, stdout=fp, stderr=fp)
     except FileNotFoundError:
+        ex.notify('Program not found')
         return
 
 
