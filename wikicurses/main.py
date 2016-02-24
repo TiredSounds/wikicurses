@@ -54,7 +54,13 @@ def showImages():
         return
 
     urls = fetchImageUrls()
-    filtered = [url for t in targets for url in urls if t in url]
+    filtered = []
+
+    for target in targets:
+        for index, url in enumerate(urls):
+            if target in url:
+                filtered.append(url)
+                del urls[index] # prevent more than one occurrence of image
 
     try:
         command = [settings.conf.get('images', 'program')]
@@ -67,7 +73,7 @@ def showImages():
     except (settings.configparser.NoOptionError,
             settings.configparser.NoSectionError):
         if command == ['feh']:
-            args = ['-q', '--zoom', 'fill', '--image-bg', 'white', '-g', '400x400']
+            args = ['-q', '--scale-down', '--image-bg', 'white', '-g', '400x400']
         else:
             args = []
 
@@ -92,8 +98,20 @@ def fetchImageTargets():
     page_title = re.sub(r' ', '_', page.title)
     raw = wiki._query(customurl=url, action="raw", title=page_title)
 
-    targets = re.findall(r'\b(?:File|Image):[^]|\n\r]+', raw) # relevant ones
-    targets = [re.sub(r'(?:File|Image):', '', i) for i in targets]
+    ### Finding targets...
+    targets = []
+
+    ## of the form `[[Image:foobar.png]]`
+    for match in re.finditer(r'\b(?:File:|Image:)([^]|\n\r]+)', raw):
+        targets.append(match.group(1))
+
+    ## of the form `image1 = foobar.png`, `image2=foobar.png`,
+    ## and `image       =   bar baz.png` etc...
+    for match in re.finditer(
+            r'(image\d?[\t ]*?=[\t ]*)(.+?\..+?)((?=[^A-Za-z0-9\.])|(?:$))',
+            raw):
+        targets.append(match.group(2))
+
     targets = [re.sub(r' ', '_', i) for i in targets]
 
     return targets
