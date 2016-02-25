@@ -5,6 +5,7 @@ import argparse
 import tempfile
 import subprocess
 import urllib.parse
+from functools import lru_cache
 
 import urwid
 
@@ -47,13 +48,16 @@ def showImages():
         ex.notify('Cancelled: Only works on Wikipedia')
         return
 
-    targets = fetchImageTargets()
+    targets = fetchImageTargets(page.title)
 
     if not targets:
         ex.notify('No relevant images found')
         return
 
-    urls = fetchImageUrls()
+    ## We make a copy of the returned list here,
+    ## because it is memoized with `lru_cache` and we will be deleting
+    ## elements from it non-permanently.
+    urls = list(fetchImageUrls(page.title))
     filtered = []
 
     for target in targets:
@@ -88,14 +92,15 @@ def showImages():
         return
 
 
-def fetchImageTargets():
+@lru_cache()
+def fetchImageTargets(page_title):
     """
     Get filenames of relevant images from the current article.
 
     These are used to filter out non-relevant images from the API result.
     """
     url = re.sub(r'api.php', 'index.php', wiki.siteurl)
-    page_title = re.sub(r' ', '_', page.title)
+    page_title = re.sub(r' ', '_', page_title)
     raw = wiki._query(customurl=url, action="raw", title=page_title)
 
     ### Finding targets...
@@ -117,9 +122,10 @@ def fetchImageTargets():
     return targets
 
 
-def fetchImageUrls():
+@lru_cache()
+def fetchImageUrls(page_title):
     """Use API to fetch all image urls on current article."""
-    page_title = re.sub(r' ', '_', page.title)
+    page_title = re.sub(r' ', '_', page_title)
     result = wiki._query(action="query", titles=page_title, generator="images",
                          prop="imageinfo", iiprop="url", format="json")
 
