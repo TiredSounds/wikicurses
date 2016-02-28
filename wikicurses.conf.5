@@ -49,6 +49,17 @@ Hide the References section at the bottom of the page and strip citations from t
 .RE
 .SS keymap
 This section configures the keyboard bindings of wikicurses, in the format "key=command". Command can be any ex command supported by wikicurses.
+.SS images
+.PP
+program
+.RS 4
+The name of the command to use to show images. It should be able to take space separated URLs as arguments. Defaults to feh if unspecified.
+.RE
+.PP
+arguments
+.RS 4
+The list of arguments given to the image display program. The URLs are appended to this. This is a comma and space separated list. Example: `--flag, -abc, -d, --option-with-arg, arg`.
+.RE
 .SS Other Sections
 Other sections are treated as wiki entries. The url is the url for api.php on the wiki. The username and password are required for editing.
 .PP
