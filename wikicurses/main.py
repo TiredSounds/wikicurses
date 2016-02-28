@@ -73,7 +73,7 @@ def showImages():
         command = ['feh']
 
     try:
-        args = settings.conf.get('images', 'arguments').split(', ')
+        args = settings.conf.get('images', 'arguments').split(' ')
     except (settings.configparser.NoOptionError,
             settings.configparser.NoSectionError):
         if command == ['feh']:
