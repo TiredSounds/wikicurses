@@ -57,14 +57,16 @@ def showImages():
     ## We make a copy of the returned list here,
     ## because it is memoized with `lru_cache` and we will be deleting
     ## elements from it non-permanently.
-    urls = list(fetchImageUrls(page.title))
+    image_info = list(fetchImageInfo(page.title))
     filtered = []
 
     for target in targets:
-        for index, url in enumerate(urls):
-            if target in url:
+        for index, i in enumerate(image_info):
+            title, url = i
+            if target in title:
                 filtered.append(url)
-                del urls[index] # prevent more than one occurrence of image
+                del image_info[index] # prevent more than one occurrence of image
+                break
 
     try:
         command = [settings.conf.get('images', 'program')]
@@ -117,25 +119,27 @@ def fetchImageTargets(page_title):
             raw):
         targets.append(match.group(2))
 
-    targets = [re.sub(r' ', '_', i) for i in targets]
-
     return targets
 
 
 @lru_cache()
-def fetchImageUrls(page_title):
-    """Use API to fetch all image urls on current article."""
+def fetchImageInfo(page_title):
+    """
+    Use API to fetch all image titles and urls on current article.
+
+    Returns a list of `(title, url)` tuples.
+    """
     page_title = re.sub(r' ', '_', page_title)
     result = wiki._query(action="query", titles=page_title, generator="images",
                          prop="imageinfo", iiprop="url", format="json")
 
     json_result = json.loads(result)
-    urls = []
+    info = []
 
     for v in json_result['query']['pages'].values():
-        urls.append(v['imageinfo'][0]['url'])
+        info.append((v['title'], v['imageinfo'][0]['url']))
 
-    return urls
+    return info
 
 
 class SearchBox(urwid.Edit):
